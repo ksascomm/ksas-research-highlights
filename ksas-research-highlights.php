@@ -11,7 +11,7 @@
  * Plugin Name:  KSAS Research Highlights
  * Plugin URI:   http://krieger.jhu.edu/
  * Description:  Custom post type for Faculty Research Highlights
- * Version:      2.0.0
+ * Version:      2.1.0
  * Author:       KSAS Communications
  * Author URI:   mailto:ksasweb@jhu.edu
  * License:      GPL2
@@ -370,64 +370,87 @@ class Research_Highlights_Widget extends WP_Widget {
 			array(
 				'post_type'      => 'research-highlight',
 				'posts_per_page' => $quantity,
-				'orderby'        => 'rand',
+				'meta_key'       => 'publication_year',
+				'orderby'        => 'meta_value date',
+				'order'          => 'DESC',
 			)
 		);
 		if ( $research_highlights_widget_query->have_posts() ) : ?>
-		<div class="book-listings">
+		<div class="research-listings container">
+		<div class="flex">
 			<?php
 			while ( $research_highlights_widget_query->have_posts() ) :
 				$research_highlights_widget_query->the_post();
 				global $post;
 				?>
-				<article class="grid-x" aria-labelledby="book-<?php the_ID(); ?>">
-					<div class="cell">
-					<?php
-					if ( has_post_thumbnail() ) {
-						the_post_thumbnail( 'large', array( 'alt' => esc_html( get_the_title() ) ) );  }
-					?>
-					<h5>
-					<?php
-					if ( get_post_meta( $post->ID, 'publication_link', true ) ) :
-						?>
-						<a href="<?php echo esc_url( get_post_meta( $post->ID, 'publication_link', true ) ); ?>" id="book-<?php the_ID(); ?>"><?php the_title(); ?> <i class="fa-sharp fa-solid fa-square-arrow-up-right"></i></a>
-						<?php else : ?>
-						<a href="<?php the_permalink(); ?>" id="book-<?php the_ID(); ?>"><?php the_title(); ?><span class="link"></span></a>
-						<?php endif; ?>
-					</h5>
-					<ul>
-					<?php
-					if ( get_post_meta( $post->ID, 'publication_name', true ) ) :
-						?>
-						<li><?php echo esc_html( get_post_meta( $post->ID, 'publication_name', true ) ); ?>, <?php echo esc_html( get_post_meta( $post->ID, 'publication_year', true ) ); ?></li>
-					<?php endif; ?>
-					<?php
-					$faculty_post_id = get_post_meta( $post->ID, 'publication_author', true );
-					if ( get_post_meta( $post->ID, 'publication_author', true ) ) :
-						?>
-						<li>
-						<?php echo esc_html( get_the_title( $faculty_post_id ) ); ?>
-						<?php if ( get_post_meta( $post->ID, 'publication_author_other', true ) ) : ?>
-							and <?php echo esc_html( get_post_meta( $post->ID, 'publication_author_other', true ) ); ?>
-						<?php endif; ?>
-						</li>
-					<?php endif; ?>
-					</ul>
-					<p>
-						<?php echo wp_trim_words( get_the_excerpt(), 45, '...' ); ?>
-					</p>
-					</div>
-				</article>
+
+		<div class="single-highlight">
 				<?php
-		endwhile;
+				if ( has_post_thumbnail() ) {
+					the_post_thumbnail(
+						'large',
+						array(
+							'class' => 'object-cover object-center w-full h-48 my-0',
+							'alt'   => esc_html( get_the_title() ),
+						)
+					);
+				}
+				?>
+			<!-- Post Thumbnail -->
+			<div class="flex flex-grow">
+				<div class="flex flex-col justify-between px-4 py-6 text">
+					<div>
+						<h3
+							class="block">
+							<?php
+							if ( get_post_meta( $post->ID, 'publication_link', true ) ) :
+								?>
+								<a href="<?php echo esc_url( get_post_meta( $post->ID, 'publication_link', true ) ); ?>" aria-label="External link to: <?php the_title(); ?>">
+									<?php the_title(); ?> <i class="fa-sharp fa-solid fa-square-arrow-up-right"></i>
+								</a>
+							<?php else : ?>
+								<a href="<?php the_permalink(); ?>" aria-label="Link to: <?php the_title(); ?>"
+									<?php the_title(); ?>
+								</a>
+							<?php endif; ?>
+							<!-- Post Title -->
+						</h3>
+						<?php
+						if ( get_post_meta( $post->ID, 'publication_name', true ) ) :
+							?>
+						<p class="publication-title"><em><?php echo esc_html( get_post_meta( $post->ID, 'publication_name', true ) ); ?></em>, <?php echo esc_html( get_post_meta( $post->ID, 'publication_year', true ) ); ?></p>
+						<?php endif; ?>
+						<p>
+							<?php echo wp_trim_words( get_the_content(), 35, '...' ); ?>
+							<!-- Post Content -->
+						</p>
+					</div>
+					<div>
+					<?php
+					$research_highlight_categories = get_the_terms( $post->ID, 'research-highlight-category' );
+					foreach ( $research_highlight_categories as $research_highlight_category ) :
+						?>
+						<a href="<?php echo $research_highlight_category->slug; ?>" aria-label="External link to: <?php the_title(); ?>" class="button">
+							Explore <?php echo $research_highlight_category->name; ?> Research &nbsp;<span class="fa-solid fa-circle-chevron-right" aria-hidden="true"></span>
+						</a>
+					<?php endforeach; ?>
+					</div>
+				</div>
+			</div>
+		</div>
+
+
+				<?php
+				endwhile;
 			?>
 		</div>
+		</div>
 			<?php
-		endif;
-		echo $args['after_widget'];
+			endif;
+			echo $args['after_widget'];
 	}
 
-	/** Update/Save the widget settings. */
+			/** Update/Save the widget settings. */
 	public function update( $new_instance, $old_instance ) {
 		$instance = array();
 
@@ -437,7 +460,7 @@ class Research_Highlights_Widget extends WP_Widget {
 		return $instance;
 	}
 
-	/** Widget Options */
+			/** Widget Options */
 	public function form( $instance ) {
 
 		/* Set up some default widget settings. */
@@ -460,7 +483,7 @@ class Research_Highlights_Widget extends WP_Widget {
 			<input id="<?php echo esc_html( $this->get_field_id( 'quantity' ) ); ?>" name="<?php echo esc_html( $this->get_field_name( 'quantity' ) ); ?>" value="<?php echo esc_html( $instance['quantity'] ); ?>" style="width:100%;" />
 		</p>
 
-		<?php
+				<?php
 	}
 }
 
