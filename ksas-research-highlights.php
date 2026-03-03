@@ -267,7 +267,7 @@ function ksas_rh_render_meta_box( $post ) {
 function ksas_rh_save_meta( $post_id ) {
 
 	// Nonce check.
-	if ( ! isset( $_POST['ksas_rh_meta_nonce'] ) || ! wp_verify_nonce( sanitize_key( wp_unslash( $_POST['ksas_rh_meta_nonce'] ) ), 'ksas_rh_save_meta_action' ) ) {
+	if ( ! isset( $_POST['ksas_rh_meta_nonce'] ) || ! wp_verify_nonce( sanitize_key( wp_unslash( $_POST['ksas_rh_meta_nonce'] ) ), 'ksas_rh_save_meta' ) ) {
 		return;
 	}
 
